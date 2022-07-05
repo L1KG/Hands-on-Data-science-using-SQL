@@ -1,0 +1,70 @@
+-- first just get rows using the between function
+-- only shows those that have an enddate
+-- . So this will essentially give me for every day, how many employees were active on that day. And just so I'm checking my work and making sure it's all valid, by HR
+select dates.datekey, employees.startdate, employees.enddate, count(1)
+from employees cross join dates
+where dates.datekey BETWEEN employees.startdate and employees.enddate
+group by dates.datekey, employees.startdate, employees.enddate
+
+-- add check using if statement for those without end-dates
+select dates.datekey, employees.startdate, if(employees.enddate is null, "9999-12-31", employees.enddate) edate, employees.*
+from employees cross join dates
+where dates.datekey >= employees.startdate
+and (dates.datekey <= employees.enddate
+    OR
+    employees.enddate is null)
+
+-- group by month
+select DATE_TRUNC(dates.datekey, "month") as mnt, count(1) # it's basically going to take the data down below and group it and aggregate it up to that level.
+from employees cross join dates
+where dates.datekey >= employees.startdate
+and (dates.datekey <= employees.enddate
+    OR
+    employees.enddate is null)
+group by DATE_TRUNC(dates.datekey, "month")
+
+
+
+
+--And the reason is because what's happening is, for every single day that we are capturing here using our datekey. So in a month, let's say 30 days, just on average, we are going to be adding up every single time this matches. So if we have 300 employees, times 30 days, we're going to get around 9,000 results for our accounts. So this is not correct.
+-- but it's counting everyone every day, so 30x the actual number
+
+SELECT date_trunc(dates.datekey,"Month") as mt , count(1)
+From employees cross join dates
+where dates.datekey >= employees.startdate
+and (dates.datekey <= employees.enddate
+    OR
+    employees.enddate is NULL)
+group by date_trunc(dates.datekey,"Month")
+ORDER by date_trunc(dates.datekey,"Month")
+
+
+-- so typically When we choose the end of the month
+-- How to get last day of the month
+ select 
+    dates.datekey,
+    DATE_TRUNC(dates.datekey, "month") month,
+    DATE_ADD(DATE_TRUNC(dates.datekey, "month"), 1, "month") next_month,
+    DATE_ADD(DATE_ADD(DATE_TRUNC(dates.datekey, "month"), 1, "month"), -1, "day") eomonth
+
+ from dates
+ limit 10;
+
+
+
+-- now let's use that to get the active count on that day
+
+# sub-query to get end of the month
+WITH `dl` AS (
+ select DISTINCT      # DISTINCT basically says, if you had essentially like these two values here where they're both the same duplicate them for me, only give me unique values using this result set.
+    CAST(DATE_ADD(DATE_ADD(DATE_TRUNC(dates.datekey, "month"), 1, "month"), -1, "day") AS DATE) eomonth
+ from dates
+)
+select dl.eomonth, count(1)
+from employees cross join `dl` AS dl
+where dl.eomonth >= employees.startdate
+and (dl.eomonth <= employees.enddate
+    OR
+    employees.enddate is null)
+group by dl.eomonth
+order by dl.eomonth

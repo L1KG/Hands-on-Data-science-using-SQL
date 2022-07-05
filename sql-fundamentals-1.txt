@@ -1,0 +1,29 @@
+
+/* find date range */
+This will tell me the range, the domain, if you will of startdates for our employees
+select min(employees.startdate), max(employees.startdate)
+from employees
+
+/* emp starts by month / year */
+How many people started by month
+select MONTH(employees.startdate), year(employees.startdate), count(1) #I'm going to do a aggregate function here called count. And I'm just going to provide it with the number one. I could provide it with a column value or a star
+from employees
+group by MONTH(employees.startdate), year(employees.startdate) # we tell the database, okay, I'm going to get a count, how many, but then I need to sum that up. I need to aggregate that data. That's why these are called aggregation functions
+order by 2, 1 # Then, I don't just want this returned in some random order. I'm going to add order by. And I'm actually going to order by year which is the second column and then month. So, this is a shorthand that you'll see kind of more seasoned database professionals use
+
+/* Active on given date */
+select *
+from employees
+where employees.startdate >= '2008-07-01'
+and (employees.enddate <= '2008-07-01'
+    OR
+    employees.enddate is NULL)
+
+
+/* count of active on date */
+select count(1)
+from employees
+where employees.startdate >= '2008-07-01'
+and (employees.enddate <= '2008-07-01'
+    OR
+    employees.enddate is NULL)
